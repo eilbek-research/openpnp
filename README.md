@@ -1,7 +1,29 @@
+# OpenPnP -- Eilbek Research Fork
+
+This is a fork of openpnp maintained by Eilbek Research GmbH.
+
+We are working on setting up our own electronics production line in Hamburg and open-sourcing what we learn in the process.
+Our main aim is to use OpenPnP with Siemens S series feeders, and integrate openPnP in our production flow with tools such as:
+
+- KiCAD/KiBot
+- Inventree
+
+If you want to learn about our project, you can find us talking about it:
+
+- At Kicon Europe 2025: https://www.youtube.com/watch?v=X8QIjjPPQEY
+- At Chaos Communication Congress 2025 (39c3): https://events.ccc.de/congress/2025/hub/en/event/detail/in-house-electronics-manufacturing-from-scratch-how-hard-can-it-be
+
+For now, the only changes is the `eilbek-research` folder which contains design notes and plans about the changes we want to implement, we plan to:
+
+- Separate machine configuration and calibration information and enable sharing one configuration between multiple machines
+- Support multiple configuration providers (XML, Database, etc.)
+- Manage feeder and component inventory across multiple machines
+- Users right management (to prevent "simple operators" from reconfiguring the machine accidentally)
+- Completely overhauled SchultzFeeder implementation and harmonization of pre- and post-pick behaviour 
+
+---
+
 ![OpenPNP Logo](https://raw.githubusercontent.com/openpnp/openpnp-logo/develop/logo_small.png)
-
-# OpenPnP
-
 Open Source SMT Pick and Place Hardware and Software
 
 ## Introduction
