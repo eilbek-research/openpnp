@@ -1,0 +1,47 @@
+= Project plan
+:imagesdir: images
+:toc:
+
+This document contains an ordered list of Epics to realize the desired state described by the specification.
+
+== SchultzController2
+
+Is developed as a separate project, see link on index page.
+
+== SchultzFeeder2
+
+The second-generation integration of the Schultz feeders in OpenPnP.
+
+*Outcomes*
+
+- Feeders can be used routinely
+
+=== OpenPnP / SchultzFeeder2 - Familiarization and cleanup
+
+This Epic summarizes the efforts to implement the key functionality for pick&place use of the controller.
+
+Acceptance criteria:
+
+* Setup of IntelliJ Community edition is documented
+* A custom branch for our changes is created from `2.2` tag
+* Individual actuator configuration is removed from `SlotSchultzFeeder` Actuators panel (and maybe from `SchultzFeeder` actuators panel) and replaced by `Actuator base name` concept
+* Basic understanding of object persistence system is reached
+* A global config option was added to the 
+* Part description is included in representation in `FeedersPanel` - either extra column, or the modify L124 in `FeedersTableModel`,
+** Tbh this a bit more work, and should rather be an addition to the `Part` itself, that it has a `getHumanReadableId` method or something. A global config option would then determine if `getId` or `getHumanReadableId` is used for display, which could be implemented step by step in various places
+** This change should be discussed with upstream, to avoid misguided work
+* The same change shall apply to the `Part` dropdown in the `SchultzFeeder`
+
+=== OpenPnP / SchultzFeeder2 - Global settings and feeder scanning
+
+This Epic summarizes the efforts to refine the general handling of Schultz feeders in OpenPnP.
+
+=== OpenPnP / SchultzFeeder2 - New location model
+
+This Epic summarizes the efforts to fully adopt the new Schultz feeder location model in the OpenPnP.
+
+== InvenTree integration
+
+=== InvenTree integration - Synchronization of part DB
+
+This epic summarizes the effort to create unidirectional data synchronization from InvenTree to the OpenPnP part DB.

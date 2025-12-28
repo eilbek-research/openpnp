@@ -1,0 +1,33 @@
+= OpenPnP at Eilbek Research
+
+== Sub-sections
+
+link:docs/index.adoc[docs]:: Operator documentation
+link:integration/index.adoc[integration]:: System integration documentation
+link:development/index.adoc[development]:: Software development and customization documentation
+
+== Contents
+
+link:++Project plan.adoc++[Project plan.adoc]:: List of outcomes and epics to guide project implementation
+
+== Glossary
+
+=== General
+
+Feeder:: A single component feeder device, which can supply components from up to three different tapes
+Lane:: A subdivision of a feeder, into which one tape gets loaded. A feeder can have up to three of these.
+Feeder type:: The model of the feeder (corresponding to a Siemens part number)
+
+=== Machine
+
+Slot:: A physical and electrical interface into which a feeder is placed to be used by the machine
+Track:: 1/3 subdivision of a slot, with each lane of a loaded feeder being associated with a track
+
+=== OpenPnP
+
+Feeder (OpenPnP):: A device or mechanism that can present *one* type of component to the machine
+
+NOTE: While a _hardware feeder_ can have up to three lanes (and thus component types), OpenPnP is not aware of multi-lane feeders. For OpenPnP, each lane of a _hardware feeder_ is an individual _OpenPnP feeder_.
+
+Feeder location:: The position of the feeder alignment pin in the machine coordinate system.
+

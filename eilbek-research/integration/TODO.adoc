@@ -1,0 +1,20 @@
+= TODO
+
+* Homing speed must be reduced
+* Home fiducial location should be updated
+* `M206` values set for `X` and `Y` in `HOME_COMMAND` should be set to clean numbers
+* When re-homing, the machine shall move to safe Z first to not crash anywhere. Maybe use a script if this cannot be done by OpenPnP itself.
+* Buy glass target or glass ruler for calibration or understand why we do not need it
+* Avoid unnecessary rotation before pick??
+* Why does the wrong nozzle lower prior to a pick?
+* P button for Z does not consider height of already placed parts, how is that supposed to work?
+
+== Splitting of machine config and machine state
+
+Right now, no clean version control of `machine.xml` is possible, as it contains both _machine config_ and _machine state_.
+
+See https://github.com/openpnp/openpnp/pull/1780#issuecomment-2734720157 for some more info.
+
+This might be addressed in the future, first, we should wait for the new XML parser to be integrated.
+
+An implementation idea is to move any _state_ of any given object into a nested sub-class for that object, and use a different `attribute` decorator to save an instance of that object in a state file.

@@ -1,0 +1,25 @@
+= OpenPnP at Eilbek Research - Development
+:imagesdir: images
+
+This documentation section is concerned with all efforts to adapt the OpenPnP software for the use at Eilbek Research.
+
+Notably, it provides a second-generation integration for Siemens S series feeders in OpenPnP.
+
+== Contents
+
+link:++Development guide.adoc++[Development guide]:: How to work with OpenPnP in a development workflow
+
+link:TODO.adoc[TODO]:: Ordered list of tasks on the software development
+
+link:SchultzFeeder2.adoc[SchultzFeeder2]:: New Schultz Feeder implementation in OpenPnP
+
+== Links
+
+link:https://gitlab.com/eilbek-research/smt/schultzcontroller2/-/tree/master/docs?ref_type=heads[SchultzController2]:: Custom firmware to control Schultz feeders. Repository details about the function of the feeders.
+
+== Glossary
+
+SchultzFeeder:: Class that represents a single _OpenPnP Feeder_, identified by a ID read from the feeder
+SlotSchultzFeeder:: Class representing a slot that can load a single _OpenPnP Feeder_. Used as a _logical_ `slot X track` product, assigning three instances representing the tracks per physical slot.
+Pre-pick:: Action to perform before a component is picked from a feeder
+Post-pick:: Action to perform after a component is picked from a feeder

@@ -1,0 +1,47 @@
+= Part and feeder handling
+:imagesdir: images
+:toc:
+
+Part and feeder handling describe the data scheme and synchronization as well as workflows.
+
+NOTE: This documentation page shall be migrated into a separate repository
+
+NOTE: This page is only describing a work-in-progress state and needs to be updated.
+
+== Association of OpenPnP Parts with InvenTree parts
+
+OpenPnP maintains a `Parts` database for all parts available for population, as well as for virtual parts, like Fiducials.
+
+* For identification, `Parts` have the fields `ID` and `Description`
+* The part `ID` is meant to be unique -&gt; It shall be mapped to the IPN
+    
+This database shall not have to be manually maintained, but rather, be populated from InvenTree. This can be facilitated as follows:
+
+* A sync script that is run when new parts have been added to InvenTree and need to be available for a job
+** Using the REST API data is retrieved, and XML entries are generated (or updated by `IPN`) in the `Parts` DB file.
+        
+* InvenTree parts shall have a parameter which tells if a part is SMT placeable (and thus should be synced to OpenPnP)
+* Maybe the height and speed shall be maintained in InvenTree too
+** Up for debate, should be easy to include or skip
+        
+There might be merit in mixing in parts into the OpenPnP Part DB that not in Inventree (like Fiducials)
+
+*   These could come from an auxiliary data file, that correlates with footprints residing in an &nbsp;&quot;extra parts&quot; non-DB-library for special parts such as symbols, logos, fiducials  
+*   They do not need to have an IPN probably (and can&#39;t have one if they are not in InvenTree), evaluate this
+    
+image::Parts table.png[] 
+https://github.com/openpnp/openpnp/wiki/User-Manual#parts
+
+== Rendering of the Part ID and description
+
+The `ID` field of a `Part` in OpenPnP will be populated with the `IPN`. This IPN is not very handy for human use.
+
+Therefor, in any place (or, at least, in the most important places) where a part can be selected/viewed, the description should be shown too:
+
+* Either by joining the strings in the UI, e.g. `ID - Description`, most relevant when a part needs to be selected by dropdown menu
+* Or by having a separate column for the `Description` field in tabular representations, e.g. in the `Placements` table
+    
+This change has potential for a high positive usability impact.
+
+image::Job and placements tables.png[]
+https://github.com/openpnp/openpnp/wiki/User-Manual#the-tabs

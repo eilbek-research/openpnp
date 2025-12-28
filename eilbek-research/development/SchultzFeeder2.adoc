@@ -1,0 +1,209 @@
+= SchultzFeeder2 OpenPnP driver
+:imagesdir: images
+:toc:
+
+`SchultzFeeder2` is the new Schultz Feeder implementation in OpenPnP.
+
+== Theory of operation
+
+=== Physical feeder
+
+A physical feeder is just what it says, any S-Series feeder.
+
+The reference datums for the coordinate system of any physical feeder are defined as:
+
+- The center line, and thus, the center of the rear alignment pin / front alignment slot, for the short (X) feeder axis
+- The center of the rear alignment pin for the long (Y) feeder axis
+- The front (and back) resting surface for the vertical (Z) feeder axis
+
+image::FeederCoordinates.drawio.png[]
+
+All offsets stored for a physical feeder are referenced to this location.
+
+=== Physical slot
+
+A physical slot exists on the machine and can be loaded with exactly one physical feeder.
+
+It is defined by:
+
+- It's slot location
+- It's slot number
+
+It has one connector, for one physical feeder.
+
+==== Slot location
+
+The location of any slot in the machine coordinate system is defined as:
+
+- The location of the rear alignment pin for the long (Y) feeder axis
+- The location of the front alignment pin for the short (X) feeder axis
+- The location of the front resting surface for the vertical (Z) feeder axis
+
+_Note that the coordinate system orientation within the `SchultzFeeder2` code can be rotated compared to the machine coordinate system, depending on machine design._
+
+The slot location is *static* machine configuration that shall not be updated after slots are set up once.
+
+=== Logical slot
+
+A logical slot is represented by the `SlotSchultzFeeder2` class.
+One physical slot can have multiple logical slots associated.
+
+All of these associated _logical_ slots share the same _physical_ slot location.
+
+Configuration properties are:
+
+- Slot base name
+- Slot number
+- Slot location
+- Actuator base name, from which all the different actuator names are dervied. Used for multi-controller setups.
+- Track number
+
+Dynamic properties are:
+
+- Loaded feeder offset
+
+The name of a slot as displayed in the feeders table is automatically derived from the slot base name, the slot number and the track number. The resulting name must be unique.
+
+==== Synchronization
+
+Any logical slots associated with a physical slot are identified by the `Slot base name` and `Slot number`.
+
+The logical slot with the track number `1` serves as the *primary* logical slot of each physical slot. 
+
+Further *secondary* logical slots with track numbers above `1` share key properties of the primary logical slot:
+
+- Slot base name
+- Slot number
+- Slot location
+- Actuator base name
+- Loaded feeder offset
+
+Properties not shared are:
+
+- Track number
+- Loaded logical feeder ID
+
+When setting up the machine, secondary logical slots are added by selecting track numbers other than `1`.
+
+They get a reference to their primary logical slot using name pattern matching.
+It is automatically updated when the base name, physical slot number or track number are changed, and stored within the slot object.
+
+Slot configuration data that applies to all logical slots of a physical slot is read from the primary slot using this reference.
+
+In the configuration panel, for any secondary logical slot, the Wizard page of the primary logical slot is shown.
+
+Slot configuration data that applies to all logical slots of a physical slot cannot be written to a secondary slot object.
+
+A secondary logical slot without a matching primary logical slot shall never exist.
+Creation is prevented by only allowing selection of a track number other than 1 for the slot if a primary slot with that number can be found.
+
+==== Loaded feeder offset
+
+When a physical feeder is loaded into a slot, it's overall position might deviate from the nominal slot position.
+
+By scanning it's fiducial, this offset can be determined and stored with the slot, as the _Loaded feeder offset_.
+
+The _Loaded feeder offset_ is *dynamic* machine configuration, to be updated after swapping a new feeder into a slot.
+
+[NOTE]
+====
+For physical feeders with multiple fiducials / one fiducial per lane, use of only one fiducial is supported.
+
+The _Loaded feeder offset_ is applied to all secondary logical slots automatically.
+This design choice is justified by the precise alignment between lanes that S-series feeders provide.
+====
+
+==== Alternate position
+
+Feeders wider than unit width can be placed in two locations, the nominal location and a location offset by half a unit width.
+
+For now, a manual toggle of the logical slot is used to apply a fixed offset of half a slot width to the loaded logical feeder.
+Later, potentially camera detection might be used to determine in which of the two possible positions a wider feeder was placed.
+
+=== Logical feeder
+
+A logical feeder represents one track of a physical feeder and is represented by the `SchultzFeeder2` class.
+
+Logical feeders are loaded into logical slots. Loading a logical feeder into a logical slot is the operation of reading the `ID` and `Type` of the feeder.
+
+Using the `Type` data, the nominal fiducial offset (as referenced to the feeder base datum) is loaded from a feeder model database.
+Similarly, the nominal 1st pick position offset is loaded too. Both are applied internally when processing locations related to the feeder.
+
+Thus, these offsets are assumed to be fixed design values. (For the moment, this means if a feeder is not well-aligned, any devation needs to be stored in the pick location offset. Might have to be changed later)
+
+For each logical feeder, a number of properties are stored:
+
+- Pick location offset, referenced to the nominal 1st pick location, often 0,0,0,0
+- Loaded part
+
+In practice, only the primary logical feeder requests `ID` and `Type` of a physical feeder, copying these values to the secondary logical feeders.
+
+All other interactions with a physical feeder are executed individually for each logical feeder.
+
+In the future, fixed pick position offsets might be introduced per physical feeder type, allowing to select any of the nominal pick positions of this feeder type conveniently.
+
+== Use
+
+.Mockup of slot and feeder wizard
+image::Slot and feeder wizard mockup.drawio.png[]
+
+=== Slot creation
+
+Initial slot creation is performed using a script, inspired by the original SchultzController scripts.
+
+=== Slot location
+
+The slot location typically is set up by using a golden reference feeder, nominally a 3x8 type, as a mechanical drawing is available for this type.
+
+This reference feeder is placed into each slot subsequently, then it's fiducial is located.
+Using a reverse transformation which accounts for the nominal feeder offsets and ignores the _Loaded feeder offset_, the slot location can be then be updated by pressing `Capture slot location`.
+
+This calibration serves to calibrate all slots not only in relation to the machine, but in relation to each other.
+With this geometric definition, if proper squaring and homing is implemented in the future (and machine stability is given), the slots will always be in the same position.
+
+When all feeder positions drift in relation to machine coordinate system, the machine coordinate system shall be re-squared and calibrated against the golden reference feeder, potentially with a multi-point calibration.
+When the individual slot positions drift apart (unlikely), the feeder slots themselves shall be recalibrated.
+
+An alternative approach would be to re-located all feeders by a script applying fixed offsets.
+
+=== Scanning for feeders
+
+The feeder ID and type are update by pressing the `Load feeder` button on the primary logical slot.
+
+For multiple feeders, a script performs this task without excessive user interaction.
+
+=== Loaded feeder offset
+
+The loaded feeder offset is updated by pressing `Locate feeder`, which triggers the fiducial location process.
+
+Before the machine is run after downtime, on job or feeder change, as well as during extend operation, the loaded feeder offset of select or all feeders shall be recalibrated.
+
+For multiple feeders, a script performs this task without excessive user interaction.
+
+=== Wide feeder handling
+
+For wide feeders, the chosen position needs to be selected manually: TODO
+
+=== Pick location offset
+
+Just move camera there, then `Capture pick location`.
+This is a setting often changed to account for weird tape or to rotate the part correctly.
+
+== Ressources
+
+Setup-and-Calibration: Feeders::
+https://github.com/openpnp/openpnp/wiki/Setup-and-Calibration_Feeders
+
+Original Schultz feeder integration::
+https://github.com/openpnp/openpnp/wiki/SchultzFeeder-and-SlotSchultzFeeder
+
+Original Schultz feeder scripts::
+https://github.com/bilsef/SchultzController/tree/master/Scripts/SchultzFeeders
+
+Original Schultz slot feeder driver and wizard::
+* https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/machine/reference/feeder/SlotSchultzFeeder.java
+* https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/machine/reference/feeder/wizards/SlotSchultzFeederConfigurationWizard.java
+
+Original Schultz feeder driver and wizard::
+* https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/machine/reference/feeder/SchultzFeeder.java
+* https://github.com/openpnp/openpnp/blob/develop/src/main/java/org/openpnp/machine/reference/feeder/wizards/SchultzFeederConfigurationWizard.java

@@ -1,0 +1,91 @@
+== Feeder integration
+:imagesdir: images
+:toc:
+
+Feeder integration describes the overall design of the Schultz feeder integration with OpenPnP.
+
+== General structure
+
+=== Abstraction
+
+Structurally, the default OpenPnP G-code driver serves as the interface between the controller and the OpenPnP actuator mechanism.
+The actuator mechanism remains in use because it exposes the controller cleanly within the OpenPnP framework and handles protocol parsing of the human-readable M-code protocol.
+Plaintext facilitates easy debugging and development with standard tools.
+
+The `SchultzFeeder` and `SlotSchultzFeeder` classes include the standard (part loaded, location, ...) and custom data fields (offsets, IDs, ) needed for an OpenPnP feeder. They use the OpenPnP framework to realize all basic feeder functionality.
+
+A customized wizard is used for Feeder and Slot configuration.
+
+=== State storage
+
+OpenPnP shall store all information needed to work with the feeders in two places:
+
+- In the machine configuration of the G-code driver object
+- In the machine configuration of each feeder object
+
+=== Startup
+
+Any special initialization of the controller shall be performed in the `ENABLE_COMMAND` of the G-code driver.
+
+For now, no global settings are planend, but e.g. the pick operation mode could be set using a M-code at startup of the machine.
+
+== Machine representation
+
+=== Slot/track identification and feeder loading
+
+The physical machine slots are numbered starting at 01, ascending. One feeder connector exists per slot.
+
+Each slot has three tracks, numbered 1-3. The reason is that the maximum amount of lanes that can be associated with a slot is three. If a feeder with less than three lanes is loaded, the remaining tracks of a slot remain unloaded.
+
+For each physical slot, three `SlotSchultzFeeder` are created, representing the three (slot, track) tuples per slot.
+
+The slot name is constructed by the schema `S01.T1`, with `S` and `T` being slot and track number.
+
+The slot name is not used beyond it's identifying function in the OpenPnP software.
+
+TODO: When the feeder controller is addressed, the slot ID used to build the gcode is taken from the `Actuators` panel field `Feeder number`. As of now, this is a double. It should be a string, or two numeric fields (feeder, track).
+
+The value assigned in `Actuators` panel `Feeder number` field to identify the slot rolls over at 16, as front and back slots use two distinct controllers.
+
+When a feeder is loaded into a slot, the tracks of that slot get populated to match the lanes of the feeder. The loaded feeder/lane names are shown in brackets `(F007.L2)` behind the slot/track name.
+
+.Representation of the feeder table in OpenPnP
+[literal]
+----
+S01.T1 (F007.L1)
+S01.T2 (F007.L2)
+S01.T3
+S02.T1 (F025.L1)
+S02.T2 (F025.L2)
+S02.T3 (F025.L3)
+...
+S32.T1 (F044.L1)
+S32.T2
+S32.T3
+----
+
+TODO: Decide how the Feeder/Lane ID is treated, as a string or as two numerals. Decide if the leading zero(s) are part of the string representation and thus critical to correct identification, or are just a rendering matter in OpenPnP.
+
+For reference, look at the following picture: https://github.com/openpnp/openpnp/wiki/SchultzFeeder-and-SlotSchultzFeeder#setup
+
+=== Slot configuration
+
+The need for selecting all actuators manually in the UI shall be removed.
+Instead, just the Actuator name prefix shall be specified (e.g. `SchultzFront` and `SchultzBack`) (probably just as text) and the individual actuator names (e.g. `SchultzFront-GetID`, `SchultzFront-PrePick`) are derived in code.
+
+The actuator mechanism shall still be used to trigger actions or read values via the `Actuators` tab of OpenPnP (leaving the existing buttons and data fields).
+
+=== Feeder geometry
+
+In `Feeder hardware offset calculation.ods`, the feeder-specific offsets (pin to fiducial) are captured for a 2x8 feeder based on the known 3x8 feeder geometry.
+
+For 3x8, the drawing values are:
+
+3x8 Pin to Fid distance	Feeder	    4.2	      269.1
+
+For 2x8, the measured results are:
+
+2x8 Lane 1 Pin to Fid distance			-2.0			268.6
+2x8 Lane 2 Pin to Fid distance			13.1			268.6
+
+These values should be verified with a second 3x8 feeder, in a different machine slot.

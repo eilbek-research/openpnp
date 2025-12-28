@@ -1,0 +1,18 @@
+= OpenPnP at Eilbek Research - Integration
+:imagesdir: images
+
+This documentation section is concerned with the system integration of OpenPnP.
+
+It covers general concepts as well as all set-up steps.
+
+== Contents
+
+link:++OpenPnP integration.adoc++[OpenPnP integration.adoc]:: Overall definitions and behavior of the OpenPnP in the context of our machine
+
+link:++Feeder integration.adoc++[Feeder integration.adoc]:: Overall design of the Schultz feeder integration with OpenPnP
+
+link:++Part and feeder handling.adoc++[Part and feeder handling.adoc]:: Overall design of the Schultz feeder integration with OpenPnP
+
+=== Miscellaneous
+
+link:TODO.adoc[]:: Open points

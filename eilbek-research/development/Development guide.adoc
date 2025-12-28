@@ -1,0 +1,86 @@
+= Development guide
+
+This guide covers both setting up your local machine for OpenPnP for development, as well as deploying development versions to a PnP machine.
+
+== Resources
+
+https://github.com/openpnp/openpnp/wiki/Developers-Guide:: Read this well, because it outlines key design concepts of OpenPnP
+
+== Getting started with OpenPnP development
+
+=== Toolchain setup
+
+* Install Jetbrains toolbox via `appman -i jetbrains-toolbox`
+* Install IntelliJ Community Edition via Jetbrains Toolbox
+* Install Java 21 and maven: `sudo dnf install java-21-openjdk java-21-openjdk-devel maven`
+* Launch IntelliJ, click on top-right gear icon, click on `Keymap`, click on `Install keymap`, install the plugin `VSCode Keymap` and activate it
+
+=== First start and build
+
+* Open the `openpnp` project
+* Consider to hide warnings if there are too many. To do so, click on the bottom-left exclamation mark, then click on the eye and configure warnings as needed
+* Open the terminal and run `mvn package -DskipTests`
+* Launch with `./openpnp.sh`
+** This script is not included in the target folder, and needs to be redistributed manually, when needed e.g. on a remote machine
+
+== Test and debugging
+
+=== Handling of the OpenPnP development version
+
+As development is performed using the production machine, the development version of OpenPnP including the configuration needs to be strictly separated from the production version and it's config.
+
+Therefore, for development, the following definitions are used:
+
+[source,shell]
+----
+# Location of the OpenPnP application and associated files (the contents of the `target` directory)
+~/.local/opt/openpnp-develop
+
+# Location of the configuration
+~/.openpnp2-develop
+----
+
+The launch script `openpnp.sh` can be used to launch the development version, too.
+This is achieved by differentiating on the script name when it is called from a symlink:
+
+[source,shell]
+----
+cd .local/bin
+ln -s openpnp.sh openpnp-develop.sh
+----
+
+After set-up of this symlink, `openpnp-develop.sh` is available in `$PATH`.
+
+=== Development and debugging workflows
+
+The _remote_ as per this definition is the PnP PC/machine, while your computer is designated _local_.
+
+==== Local build and remote execution
+
+This is the typical flow.
+It means to build a dev version of OpenPnP locally, then to transfer it to the remote machine PC.
+
+To compile a development version quickly and without tests, the command `mvn package -DskipTests` is used.
+
+For deployment to the remote PnP machine, the following command is suitable:
+
+[source,shell]
+----
+# Copy the target folders contents to the machine PC, deleting all files that should not be present on the destination
+rsync -ar --delete --info=progress2 target/ pnp@10.2.20.122:/home/pnp/.local/opt/openpnp-develop
+----
+
+==== Remote build and exeuction / debugging
+
+Remote debugging can be used.
+Details TBD.
+
+https://www.jetbrains.com/help/idea/tutorial-remote-debug.html#create-run-configurations
+
+== GUI development
+
+Maybe https://eclipse.dev/windowbuilder/ can be used to edit the OpenPnP GUI, some hints on this were given on the OpenPnP GitHub.
+
+== Contributing upstream
+
+* Pay attention to run `mvn package` *without* `-DskipTests`

@@ -1,0 +1,42 @@
+= Key insights
+
+== Z coordinate system
+
+We use the default convention used by OpenPnP: https://github.com/openpnp/openpnp/wiki/Machine-Axes#a-word-about-z-coordinates
+
+Deviating from this convention is not allowed, unless OpenPnP implements official support for it. Otherwise, we would move outside of any supported and validated configuration, with the risk of triggering undiscovered bugs and incorrectly working issues and solution wizards (as they might become unavailable when an object has a Z coordinate != 0).
+
+Also, the notion of the default Z coordinate being `0` for newly-created objects (feeders etc.) is a safe practical default.
+
+See https://github.com/openpnp/openpnp/pull/1682 for some further practical comments on the "Z offset" question.
+
+[IMPORTANT]
+====
+We *still* do not reference our coordinate system based on the balanced nozzle tip position, but as an offset from the table.
+
+This enables a sane and fixed coordinate system, where all Z positions (of boards, feeders, ...) are not dependent on the head (which might be modified), but on the machine table/frame.
+
+This 0 point shall around 1 mm below the balanced nozzle positions, so that the nozzles will *always* be in position above 0 in balanced config, even accounting for small miscalibrations or machine flex.
+
+TODO: Investigate a bit further how this interacts with the small margin allowed by the I&S wizard: https://github.com/openpnp/openpnp/pull/1682/files#diff-bfa90f7d62344340afebadb42409e8dc586af2521369557724afea3eddcebca1R209
+====
+
+== Nozzle balance / Z limit switch offset
+
+The offset between balanced nozzle position and the limit switch trigger is a critical precondition to calibration.
+
+It needs to be determined after homing at the nominal homing speed by jogging the nozzles to equal height with the offset being set to zero, then configuring the N1 nozzle height at balance as the offset.
+
+The value needs to be set in two places:
+
+. In the `HOME_COMMAND` of the machine driver, using `M206`
+. In the `Z` axis configuration `Home Coordinate` field
+
+After setting, it should be double-checked.
+
+TODO: The `Z` axis `Home Coordinate` field might be ineffectual if `Sync Initial Location` is enabled on the machine driver. If yes, it should be left to zero.
+
+== Further integration notes
+
+* The board is elevated above table to be able to place double sided boards
+

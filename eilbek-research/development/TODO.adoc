@@ -1,0 +1,119 @@
+= TODO
+:imagesdir: images
+
+Look at link:++Feeder Wizard changes.drawio.png++[] and link:++Slot and feeder wizard mockup.drawio.png++[] for reference.
+
+== Machine
+
+* Add coordinate system arrows on the machine
+* The nozzles on the outside (relative) go into negative coordinates - OK?
+
+== Project
+
+* Set up git somehow to allow proper code access from the PnP machine
+* Also set up a repo for the machine config
+* Figure out how we can update `eilbek-research` to upstream `main` regularly
+* Add to todo:
+** How the two wizards relate
+** How we implement Banks to give default names to feeders
+
+== Code, scripts and configuration
+
+* [x] Modify/ improve slot creation script
+
+=== Immediate clean-up
+
+This clean-up is done to make the codebase more manageable and to represent the operational model of the feeders cleaner.
+
+==== Actuator base name
+
+Replaces all `xyzActuatorName` members by a single member `actuatorBaseName`.
+Actuator names are derived from this base name.
+
+The wizard is updated accordingly.
+
+==== Actuator migration
+
+Removes `// Migrate actuator value types.` functionality and associated members.
+
+Backwards compatibility is broken anyways and typing the Actuator base name once when upgrading is considered acceptable.
+
+==== Introduce channelNumber and trackNumber members
+
+This replaces the "FeederNumber" text box, also, it replaces the terribly named `actuatorValue` member (which signifies the channel number) by something understandable.
+
+==== Do not trigger getCount when the wizard is loaded
+
+In `SchultzFeederConfigurationWizard.java:245`, `getIdActuatorAction` should not be triggered when the wizard is loaded.
+
+The ID should only ever be read when a `Load` is performed to eliminate any possible alternative code paths causing state desynchronization.
+
+`getIdActuatorAction` is remove completely, as reading of the ID is always and only performed during said load / re-scan.
+
+==== Handle clean loading and unloading
+
+Entry point: `SlotSchultzFeederConfigurationWizard.java`
+
+`loadFeederAction` at L627: This method should not exist in this form.
+Feeders cannot be loaded by typing an ID then clicking load.
+
+The only way to load a feeder is to call the `loadFeeder()` method on `SlotSchultzFeeder2`, which then determines if a valid feeder is present and can be loaded. If the scan is unsuccessful, the feeder is unloaded.
+
+`loadFeederAction` only calls `loadFeeder()`, `deleteFeederAction` calls `unloadFeeder()`, both update the read-only text box.
+
+`loadFeeder()` uses `setFeeder(Feeder feeder)`, the latter method shall be protected/private.
+
+If a feeder with the given ID does not exist yet, it is automatically created, then loaded.
+
+The feeder ID and name should be generated from the result of a scan, they should look like `F0017.L1`, where `0017` is the ID read from the feeder, and `1` is the value of `trackNumber` of the slot.
+It is stored in the database literally, as `F0017.L1`.
+
+It is acknowledge that this allows creation of "partial" feeders, if not all logical slots are scanned at once.
+In practice, this should not be an issue.
+
+`LoadFeederSlots.js` and `UnloadAllSlots.js` should be ported to Python. They should do nothing more than call `loadFeeder()` / `unloadFeeder()` and might soon be replaced by some buttons integrated into OpenPnP.
+
+=== Medium importance improvements
+
+==== Allow hiding of empty feeder slots
+
+Empty feeder slots can be hidden from the feeder table with the `Hide empty` toggle button.
+
+==== Re-scan before job start
+
+A mechanism to re-scan feeders when/before a job is started.
+This ensures the feeders were not swapped without a re-scan, potentially picking incorrect components.
+It does not need to report an error, because either there are the needed feeders, or not - OpenPnP handles this automatically.
+
+Function is implemented with an `ActuatorSignaler` and a `ScriptActuator`, triggering a re-scan.
+
+==== Recycling support
+
+Recycling with wide shutter-less feeders puts the component back in the first exposed pocket.
+The component is not protected from loss during storage, but a significant benefit is still realized, as during setup, components can be picked, then recycled.
+
+Recycling with shutter feeders requires the "Advance-before-pick" pick mode to be set.
+It opens the shutter, puts the component back, and closes it again.
+It is of somewhat lower priority, until we use high value components in shutter feeders.
+
+Both modes store the "is a component exposed" / "is a component under the shutter" state within the feeder object and persist it to the database.
+This enables correct switching between the pick modes, as well as correct state across multiple machines, avoiding component waste.
+
+In case a recycled and exposed components gets lost during storage (if the tape was not moved back manually and the component is not needed for the job anymore), the stored state will deviate from the real state, this is acceptable.
+
+The function is implemented using `canTakeBackPart()` / `takeBackPart(Nozzle nozzle)` of the `Feeder` interface.
+
+== Optional QoL
+
+* Disarm dangerous "Set position to camera/to nozzle location" buttons are disarmed somehow
+
+== Random
+
+* Add illustrations
+* Notify when feeder is newly created (first seen)? A message box could be created from `SlotSchultzFeederConfigurationWizard.java:642`.
+* Around which axis is the rotation in the loaded feeder offset? Does it make sense at all?
+* Add SchultzSettings global settings object + wizard
+* Create new version of fiducial scanning script using new geometry information
+** Track 1, 2 and 3 are located in the same place, at the fiducial
+*** When scanning the fiducial, unfortunately, the slot location is updated
+** Only for track 1 a fiducial is scanned
